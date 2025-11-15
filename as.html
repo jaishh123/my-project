@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mini E-Commerce Portal — Demo</title>
+  <style>
+    :root{
+      --accent:#0ea5a5;
+      --muted:#6b7280;
+      --bg:#0f172a;
+      --card:#0b1220;
+      --glass: rgba(255,255,255,0.03);
+    }
+    *{box-sizing:border-box}
+    body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; margin:0; min-height:100vh; background: linear-gradient(180deg,#071025 0%, #07172b 60%); color:#e6eef6}
+    header{background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); backdrop-filter: blur(6px); border-bottom:1px solid rgba(255,255,255,0.03); position:sticky; top:0; z-index:20}
+    .container{width:min(1200px,95%); margin:0 auto; padding:14px 0;}
+    nav{display:flex; align-items:center; justify-content:space-between}
+    .brand{display:flex; gap:10px; align-items:center}
+    .logo{width:40px; height:40px; background:var(--accent); border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:700; color:#042027}
+    .menu{display:flex; gap:12px; align-items:center}
+    .menu a{color:var(--muted); text-decoration:none; padding:8px 10px; border-radius:6px}
+    .menu a.active, .menu a:hover{color:#e6eef6; background:var(--glass)}
+    .actions{display:flex; gap:8px; align-items:center}
+    button, .btn{background:linear-gradient(180deg,#0ea5a5,#089191); color:#042027; border:none; padding:8px 12px; border-radius:8px; cursor:pointer}
+    .ghost{background:transparent; color:var(--muted); border:1px solid rgba(255,255,255,0.03); padding:8px 10px}
+
+    main{padding:24px 0}
+    .grid{display:grid; gap:18px}
+    .hero{display:flex; gap:24px; align-items:center; padding:18px; background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border-radius:12px}
+    .hero .left{flex:1}
+    .hero h1{margin:0 0 6px 0}
+    .hero p{margin:0; color:var(--muted)}
+
+    .products{display:grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap:16px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.03)}
+    .card img{width:100%; height:140px; object-fit:cover; border-radius:8px}
+    .card h3{margin:8px 0 6px 0}
+    .muted{color:var(--muted); font-size:14px}
+
+    .row{display:flex; gap:12px; align-items:center}
+    .col{flex:1}
+
+    /* panels */
+    .panel{padding:12px; border-radius:10px; background:rgba(255,255,255,0.015); border:1px solid rgba(255,255,255,0.02)}
+
+    /* forms */
+    form{display:flex; flex-direction:column; gap:10px}
+    input[type=text], input[type=password], input[type=email], textarea, select{padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.03); background:transparent; color:inherit}
+    label{font-size:13px}
+    .error{color:#ffb4b4; font-size:13px}
+
+    /* lists */
+    ul.list{list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px}
+    li.item{display:flex; gap:10px; align-items:center; padding:8px; border-radius:8px; background:rgba(255,255,255,0.01)}
+
+    footer{margin-top:28px; color:var(--muted); padding:30px 0}
+
+    /* modal */
+    .modal-backdrop{position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.6); z-index:60}
+    .modal{width:100%; max-width:540px; background:var(--card); padding:18px; border-radius:12px}
+    .modal.show{display:flex}
+
+    /* responsive */
+    @media (max-width:800px){
+      .hero{flex-direction:column; align-items:flex-start}
+      nav{flex-direction:column; gap:8px}
+      .menu{flex-wrap:wrap}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <nav>
+        <div class="brand">
+          <div class="logo">E</div>
+          <div>
+            <div style="font-weight:700">MiniShop</div>
+            <div style="font-size:12px;color:var(--muted)">Demo e-commerce portal</div>
+          </div>
+        </div>
+        <div class="menu" id="mainMenu">
+          <a href="#home" class="nav-link active" data-route="home">Home</a>
+          <a href="#products" class="nav-link" data-route="products">Product items</a>
+          <a href="#contact" class="nav-link" data-route="contact">Contact Us</a>
+          <a href="#about" class="nav-link" data-route="about">About Us</a>
+        </div>
+        <div class="actions">
+          <button id="wishlistBtn" class="ghost">Wishlist (<span id="wishlistCount">0</span>)</button>
+          <button id="ordersBtn" class="ghost">Orders (<span id="ordersCount">0</span>)</button>
+          <div id="userArea">
+            <button id="loginBtn" class="btn">Login / Register</button>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section id="home" class="grid">
+      <div class="hero panel">
+        <div class="left">
+          <h1>Welcome to MiniShop</h1>
+          <p>Your demo e-commerce portal — browse products, add to wishlist, place orders, leave reviews, or contact customer care.</p>
+        </div>
+        <div style="width:320px">
+          <div class="panel">
+            <strong>Quick actions</strong>
+            <div style="margin-top:8px" class="row">
+              <button id="shopNow" class="btn">Shop Now</button>
+              <button id="openRegister" class="ghost">Register</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Orders List</h3>
+        <ul class="list" id="ordersList">
+          <!-- orders go here -->
+        </ul>
+      </div>
+
+      <div class="panel">
+        <h3>Customer Care & Reporting</h3>
+        <form id="careForm">
+          <label for="issue">Tell us your issue (short)</label>
+          <input id="issue" type="text" required placeholder="Order delay / Refund / Product issue">
+          <label for="details">Details</label>
+          <textarea id="details" rows="3" placeholder="Give some details"></textarea>
+          <div class="row"><button class="btn" type="submit">Send</button><button id="viewReports" type="button" class="ghost">View Reports</button></div>
+        </form>
+        <div id="reportsPanel" style="margin-top:10px; display:none">
+        </div>
+      </div>
+    </section>
+
+    <section id="productsSection" style="margin-top:18px">
+      <h2 style="margin:6px 0">Products</h2>
+      <div class="products" id="productsGrid">
+        <!-- products inserted by JS -->
+      </div>
+    </section>
+
+    <section id="reviewsSection" style="margin-top:18px">
+      <div class="panel">
+        <h3>Recent Comments & Reviews</h3>
+        <ul class="list" id="reviewsList"></ul>
+      </div>
+    </section>
+
+    <section id="contact" style="margin-top:18px">
+      <div class="panel">
+        <h3>Contact Us</h3>
+        <p class="muted">Email: support@minishop.demo | Phone: +91-80904 80904</p>
+        <p class="muted">Address: Demo Street, Chennai, India</p>
+      </div>
+    </section>
+
+    <section id="about" style="margin-top:18px">
+      <div class="panel">
+        <h3>About Us</h3>
+        <p class="muted">MiniShop is a demo e-commerce portal built to demonstrate HTML/CSS/JS features: navigation, registration/login validation, wishlist, orders, reviews, customer care and basic reporting.</p>
+      </div>
+    </section>
+
+    <!-- Modals -->
+    <div class="modal-backdrop" id="authModal">
+      <div class="modal">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
+          <strong id="authTitle">Login</strong>
+          <button id="closeAuth" class="ghost">X</button>
+        </div>
+        <div style="display:flex; gap:12px">
+          <div style="flex:1">
+            <form id="loginForm">
+              <label>Email</label>
+              <input type="email" id="loginEmail" required>
+              <label>Password</label>
+              <input type="password" id="loginPassword" required>
+              <div class="error" id="loginError" style="display:none"></div>
+              <div class="row" style="margin-top:8px">
+                <button type="submit" class="btn">Login</button>
+                <button id="switchToRegister" type="button" class="ghost">Register</button>
+              </div>
+            </form>
+          </div>
+          <div style="width:1px; background:rgba(255,255,255,0.03)"></div>
+          <div style="width:260px">
+            <form id="registerForm">
+              <label>Full name</label>
+              <input type="text" id="regName" required>
+              <label>Email</label>
+              <input type="email" id="regEmail" required>
+              <label>Password</label>
+              <input type="password" id="regPassword" required>
+              <label>Confirm Password</label>
+              <input type="password" id="regPassword2" required>
+              <div class="error" id="regError" style="display:none"></div>
+              <div class="row" style="margin-top:8px">
+                <button type="submit" class="btn">Register</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- wishlist / orders panel -->
+    <div class="modal-backdrop" id="sidePanel">
+      <div class="modal" style="max-width:800px">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
+          <strong id="sideTitle">Wishlist</strong>
+          <button id="closeSide" class="ghost">Close</button>
+        </div>
+        <div id="sideContent"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="container">
+    <div style="display:flex; justify-content:space-between; align-items:center">
+      <div>&copy; MiniShop Demo</div>
+      <div class="muted">Built with ♥ for demo</div>
+    </div>
+  </footer>
+
+  <script>
+const PRODUCTS = [
+{id:1, title:'Wireless Headphones', price:2499, img:'https://www.portronics.com/cdn/shop/files/Portronics_Muff_M3_best_headphones_under_5000.jpg?v=1744893854', desc:'Comfortable wireless headphones with noise cancellation.'},
+{id:2, title:'Smart Watch', price:3499, img:'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcTUl8kb-6CFriSxRb4y_YMqqNOtbSJgOQe8vzJdIu5CuzeF95NPBc7okHg0XJ8R18nbbVoANHjFnOgjXodutlgbwDJSYVvQsnER0DjD2kCU11vKROhzvUKwyg', desc:'Stylish watch with fitness tracking.'},
+{id:3, title:'Backpack', price:1299, img:'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcQCa2O5e9mqus_LMSj_-q39LXEKGBDpoZpsuX8E4xwe_mkWvairV916-7tDmPLgACzZ86It21LiMNghZAsgdIa_-oNQv5RIvgHgiFGQrb-SCR5FJx8K1NFwE4SW3q5QnF95Rbzq3w&usqp=CAc width=400/500', desc:'Durable travel backpack with laptop pocket.'},
+{id:4, title:'Bluetooth Speaker', price:999, img:'https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcQibI3r4Um_Lw4YegD6Lk_wIjRDrukUch0ZM_Fud__a94YHVHMWqHFcS_1pnBh7TqdpvhHh-ejcaXfU5mI9W_tQic92w3WbryWYhZQXj2u6xQayqGwx1Uk2', desc:'Portable speaker with deep bass.'},
+{id:5, title:'Running Shoes', price:2999, img:'https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcRp9TXKOn387a8mG7jC4FVyYW_4urGBq5Z-IJ8yX87mD4NNJueeAbsS8RX6YHjt9auZ0WvjpOz2LtdsgBDebRt7EbwYODjfO2jTday4-83ZkDpyNpBy4AXD', desc:'Lightweight running shoes for daily use.'}
+];
+
+    // persisted state keys
+    const LS = {
+      users: 'minishop_users',
+      session: 'minishop_session',
+      wishlist: 'minishop_wishlist',
+      orders: 'minishop_orders',
+      reviews: 'minishop_reviews',
+      reports: 'minishop_reports'
+    }
+
+    function loadState(key, fallback){ try{ const v=localStorage.getItem(key); return v? JSON.parse(v): fallback;}catch(e){return fallback} }
+    function saveState(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+
+    // initialise simple stores
+    let users = loadState(LS.users, []); // {id, name, email, passwordHash}
+    let session = loadState(LS.session, null); // {userId}
+    let wishlist = loadState(LS.wishlist, {}); // userId -> [productIds]
+    let orders = loadState(LS.orders, {}); // userId -> [{orderId, items, date, status}]
+    let reviews = loadState(LS.reviews, []); // [{productId, userId, name, rating, text, date}]
+    let reports = loadState(LS.reports, []); // customer care reports
+
+    // demo seed a user if none
+    if(!users.length){ users.push({id:1, name:'Demo User', email:'demo@minishop.test', password:'Demo@123'}); saveState(LS.users, users); }
+
+    /***********************
+      Utilities
+    ************************/
+    function byId(id){ return document.getElementById(id); }
+    function showModal(el){ el.style.display='flex'; el.classList.add('show'); }
+    function hideModal(el){ el.style.display='none'; el.classList.remove('show'); }
+    function formatCurrency(n){ return '₹' + n.toLocaleString('en-IN'); }
+    function uid(prefix='id'){ return prefix + Math.random().toString(36).slice(2,9); }
+
+    /***********************
+      Renderers
+    ************************/
+    function renderProducts(){
+      const grid = byId('productsGrid'); grid.innerHTML='';
+      for(const p of PRODUCTS){
+        const el = document.createElement('div'); el.className='card';
+        el.innerHTML = `
+          <img src="${p.img}" alt="${p.title}">
+          <h3>${p.title}</h3>
+          <div class="muted">${p.desc}</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px">
+            <div>
+              <strong>${formatCurrency(p.price)}</strong>
+            </div>
+            <div style="display:flex; gap:8px">
+              <button class="ghost" data-action="wishlist" data-id="${p.id}">♡</button>
+              <button class="btn" data-action="buy" data-id="${p.id}">Buy</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(el);
+      }
+    }
+
+    function renderOrders(){
+      const list = byId('ordersList'); list.innerHTML='';
+      const uid = session?.userId;
+      const myOrders = orders[uid] || [];
+      if(!myOrders.length){ list.innerHTML='<div class="muted">No orders yet</div>'; return; }
+      for(const o of myOrders.slice().reverse()){
+        const li = document.createElement('li'); li.className='item';
+        li.innerHTML = `<div style="flex:1"><strong>Order ${o.orderId}</strong><div class="muted">${o.date} — ${o.status}</div><div style="font-size:14px;margin-top:6px">${o.items.map(it=>it.title).join(', ')}</div></div><div style="text-align:right">${formatCurrency(o.items.reduce((s,i)=>s+i.price,0))}</div>`;
+        list.appendChild(li);
+      }
+    }
+
+    function renderReviews(){
+      const list = byId('reviewsList'); list.innerHTML='';
+      if(!reviews.length){ list.innerHTML='<div class="muted">No reviews yet. Be the first to review a product!</div>'; return; }
+      for(const r of reviews.slice().reverse()){
+        const li = document.createElement('li'); li.className='item';
+        li.innerHTML = `<div style="flex:1"><strong>${r.name}</strong> <span class="muted">— ${r.date}</span><div class="muted">${r.text}</div></div><div style="font-weight:700">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>`;
+        list.appendChild(li);
+      }
+    }
+
+    function updateCounts(){
+      const uid = session?.userId;
+      const wishCount = (wishlist[uid] || []).length;
+      const ordCount = (orders[uid] || []).length;
+      byId('wishlistCount').textContent = wishCount;
+      byId('ordersCount').textContent = ordCount;
+    }
+
+    /***********************
+      Auth (register & login) with validation
+    ************************/
+    function validateEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+    function validatePassword(p){ // simple checks
+      return p.length>=6 && /[A-Z]/.test(p) && /[0-9]/.test(p);
+    }
+
+    // register
+    byId('registerForm').addEventListener('submit', e=>{
+      e.preventDefault();
+      const name = byId('regName').value.trim();
+      const email = byId('regEmail').value.trim().toLowerCase();
+      const p1 = byId('regPassword').value;
+      const p2 = byId('regPassword2').value;
+      const err = byId('regError'); err.style.display='none'; err.textContent='';
+      if(!name || !validateEmail(email)) { err.style.display='block'; err.textContent='Enter a valid name and email'; return; }
+      if(!validatePassword(p1)){ err.style.display='block'; err.textContent='Password must be at least 6 chars, include one capital and one number'; return; }
+      if(p1!==p2){ err.style.display='block'; err.textContent='Passwords do not match'; return; }
+      if(users.find(u=>u.email===email)){ err.style.display='block'; err.textContent='Email already registered'; return; }
+      const newUser = {id: Date.now(), name, email, password:p1};
+      users.push(newUser); saveState(LS.users, users);
+      // auto-login
+      session = {userId:newUser.id}; saveState(LS.session, session);
+      wishlist[newUser.id]=[]; orders[newUser.id]=[]; saveState(LS.wishlist,wishlist); saveState(LS.orders,orders);
+      hideModal(byId('authModal'));
+      refreshUI();
+      alert('Registration successful — you are logged in.');
+    });
+
+    // login
+    byId('loginForm').addEventListener('submit', e=>{
+      e.preventDefault();
+      const email = byId('loginEmail').value.trim().toLowerCase();
+      const pw = byId('loginPassword').value;
+      const err = byId('loginError'); err.style.display='none'; err.textContent='';
+      const user = users.find(u=>u.email===email && u.password===pw);
+      if(!user){ err.style.display='block'; err.textContent='Invalid credentials'; return; }
+      session = {userId:user.id}; saveState(LS.session, session);
+      wishlist[user.id] = wishlist[user.id] || []; orders[user.id] = orders[user.id] || []; saveState(LS.wishlist,wishlist); saveState(LS.orders,orders);
+      hideModal(byId('authModal'));
+      refreshUI();
+      alert('Login successful — welcome, ' + user.name);
+    });
+
+    // ui actions for auth
+    byId('loginBtn').addEventListener('click', ()=>{ showModal(byId('authModal')); });
+    byId('openRegister').addEventListener('click', ()=>{ showModal(byId('authModal')); });
+    byId('closeAuth').addEventListener('click', ()=>{ hideModal(byId('authModal')); });
+    byId('switchToRegister').addEventListener('click', ()=>{ /* focus register */ byId('regName').focus(); });
+
+    // logout helper
+    function logout(){ session=null; saveState(LS.session, null); refreshUI(); alert('You have been logged out'); }
+
+    /***********************
+      Wishlist & Orders actions
+    ************************/
+    document.body.addEventListener('click', e=>{
+      const btn = e.target.closest('button'); if(!btn) return;
+      const action = btn.dataset.action;
+      const pid = parseInt(btn.dataset.id);
+      if(action==='wishlist') return toggleWishlist(pid);
+      if(action==='buy') return buyProduct(pid);
+    });
+
+    function toggleWishlist(pid){
+      if(!session){ alert('Please login to use wishlist'); showModal(byId('authModal')); return; }
+      const uid = session.userId; wishlist[uid] = wishlist[uid] || [];
+      if(wishlist[uid].includes(pid)){
+        wishlist[uid] = wishlist[uid].filter(x=>x!==pid);
+      } else wishlist[uid].push(pid);
+      saveState(LS.wishlist, wishlist); updateCounts();
+      alert('Wishlist updated');
+    }
+
+    function buyProduct(pid){
+      if(!session){ alert('Please login to place an order'); showModal(byId('authModal')); return; }
+      const p = PRODUCTS.find(x=>x.id===pid);
+      const uid = session.userId; orders[uid] = orders[uid] || [];
+      const ord = {orderId: 'ORD' + Date.now().toString().slice(-6), items:[p], date: new Date().toLocaleString(), status:'Processing'};
+      orders[uid].push(ord); saveState(LS.orders, orders); updateCounts(); renderOrders();
+      // after purchase add a prompt to leave review
+      const name = users.find(u=>u.id===uid)?.name || 'Customer';
+      setTimeout(()=>{
+        const text = prompt('Order placed. Would you like to leave a quick review for the product? (optional)');
+        if(text){ reviews.push({productId: p.id, userId:uid, name, rating:5, text, date:new Date().toLocaleDateString()}); saveState(LS.reviews, reviews); renderReviews(); }
+      }, 200);
+      alert('Order placed: ' + ord.orderId);
+    }
+
+    // view wishlist / orders
+    byId('wishlistBtn').addEventListener('click', ()=>{
+      const uid = session?.userId; if(!uid){ alert('Login to see your wishlist'); showModal(byId('authModal')); return; }
+      const list = wishlist[uid] || [];
+      const content = byId('sideContent'); byId('sideTitle').textContent='Wishlist';
+      if(!list.length) content.innerHTML='<div class="muted">Your wishlist is empty</div>';
+      else content.innerHTML = '<div class="row" style="flex-direction:column; gap:8px">'+list.map(id=>{
+        const p = PRODUCTS.find(x=>x.id===id);
+        return `<div style="display:flex; justify-content:space-between; align-items:center"><div><strong>${p.title}</strong><div class="muted">${formatCurrency(p.price)}</div></div><div><button class="btn" data-action="buy" data-id="${p.id}">Buy</button> <button class="ghost" onclick="removeFromWishlist(${p.id})">Remove</button></div></div>`;
+      }).join('') + '</div>';
+      showModal(byId('sidePanel'));
+    });
+
+    window.removeFromWishlist = function(pid){ const uid = session?.userId; if(!uid) { alert('login'); return; } wishlist[uid] = wishlist[uid] || []; wishlist[uid] = wishlist[uid].filter(x=>x!==pid); saveState(LS.wishlist,wishlist); updateCounts(); alert('Removed'); hideModal(byId('sidePanel')) }
+
+    byId('ordersBtn').addEventListener('click', ()=>{
+      const uid = session?.userId; if(!uid){ alert('Login to view orders'); showModal(byId('authModal')); return; }
+      const content = byId('sideContent'); byId('sideTitle').textContent='Orders';
+      const myOrders = orders[uid] || [];
+      if(!myOrders.length) content.innerHTML='<div class="muted">No orders yet</div>';
+      else content.innerHTML = myOrders.map(o=>`<div class="panel" style="margin-bottom:8px"><strong>${o.orderId}</strong><div class="muted">${o.date} — ${o.status}</div><div style="margin-top:6px">${o.items.map(it=>it.title).join(', ')}</div><div style="margin-top:6px">Total: <strong>${formatCurrency(o.items.reduce((s,i)=>s+i.price,0))}</strong></div></div>`).join('');
+      showModal(byId('sidePanel'));
+    });
+
+    byId('closeSide').addEventListener('click', ()=>{ hideModal(byId('sidePanel')) });
+
+    /***********************
+      Customer care & reporting
+    ************************/
+    byId('careForm').addEventListener('submit', e=>{
+      e.preventDefault();
+      const short = byId('issue').value.trim();
+      const details = byId('details').value.trim();
+      const entry = {id: uid(), short, details, date: new Date().toLocaleString(), user: session?.userId || 'guest'};
+      reports.push(entry); saveState(LS.reports, reports);
+      byId('issue').value=''; byId('details').value='';
+      alert('Report submitted. Our customer care will contact you soon.');
+    });
+
+    byId('viewReports').addEventListener('click', ()=>{
+      const rp = reports.slice().reverse(); const panel = byId('reportsPanel'); panel.style.display='block';
+      panel.innerHTML = '<h4>Recent reports</h4>' + (rp.length? rp.slice(0,6).map(r=>`<div style="padding:8px;border-radius:8px;margin-top:6px;background:rgba(255,255,255,0.01)"><strong>${r.short}</strong> <div class="muted">${r.date}</div><div style="margin-top:6px">${r.details}</div></div>`).join('') : '<div class="muted">No reports</div>');
+    });
+
+    /***********************
+      Navigation & small helpers
+    ************************/
+    document.querySelectorAll('.nav-link').forEach(a=>a.addEventListener('click', function(e){ e.preventDefault(); document.querySelectorAll('.nav-link').forEach(x=>x.classList.remove('active')); this.classList.add('active'); const route=this.dataset.route; document.getElementById(route).scrollIntoView({behavior:'smooth'}); }));
+
+    byId('shopNow').addEventListener('click', ()=>{ document.querySelector('[data-route="products"]').click(); document.getElementById('productsSection').scrollIntoView({behavior:'smooth'}); });
+
+    byId('logoutBtn')?.addEventListener('click', ()=>logout());
+
+    byId('authModal').addEventListener('click', e=>{ if(e.target===byId('authModal')) hideModal(byId('authModal')); });
+    byId('sidePanel').addEventListener('click', e=>{ if(e.target===byId('sidePanel')) hideModal(byId('sidePanel')); });
+
+    // small review example function
+    function leaveReview(productId, name, text, rating=5){ reviews.push({productId, userId: session?.userId || 'guest', name, text, rating, date: new Date().toLocaleDateString()}); saveState(LS.reviews,reviews); renderReviews(); }
+
+    /***********************
+      initialise UI and state
+    ************************/
+    function refreshUI(){
+      renderProducts(); renderOrders(); renderReviews(); updateCounts();
+      // user area
+      const userArea = byId('userArea'); userArea.innerHTML='';
+      if(session){
+        const u = users.find(x=>x.id===session.userId);
+        const el = document.createElement('div'); el.className='row'; el.style.gap='6px'; el.innerHTML = `<div class="muted">Hi, ${u?.name.split(' ')[0]||'User'}</div> <button id="profileBtn" class="ghost">Profile</button> <button id="logoutBtn" class="ghost">Logout</button>`;
+        userArea.appendChild(el);
+        byId('logoutBtn').addEventListener('click', ()=>{ logout(); });
+        byId('profileBtn').addEventListener('click', ()=>{ alert('Profile: ' + JSON.stringify(u)); });
+      } else {
+        const btn = document.createElement('button'); btn.id='loginBtn2'; btn.className='btn'; btn.textContent='Login / Register'; btn.addEventListener('click', ()=> showModal(byId('authModal')));
+        userArea.appendChild(btn);
+      }
+    }
+
+    // seed a couple of reviews for demo
+    if(!reviews.length){ reviews.push({productId:1,userId:1,name:'Demo User',rating:5,text:'Excellent sound quality!',date:new Date().toLocaleDateString()}); saveState(LS.reviews,reviews); }
+
+    renderProducts(); renderOrders(); renderReviews(); updateCounts(); refreshUI();
+
+    // Expose some functions for ease of demo (not needed in prod)
+    window._minishop = { PRODUCTS, users, orders, wishlist, reviews, reports };
+  </script>
+</body>
+</html>
